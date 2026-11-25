@@ -1,0 +1,373 @@
+================================================================================
+MATLAB to Python Conversion Reference - AWG5014C Control
+================================================================================
+
+This document shows how to convert MATLAB AWG control code to Python.
+
+================================================================================
+DEPENDENCIES
+================================================================================
+
+Install required Python packages:
+
+    pip install pyvisa numpy
+
+For camera control, you may also need (depending on your camera):
+    pip install opencv-python          # For generic cameras
+    pip install pypylon                # For Basler cameras
+    pip install ids-peak               # For IDS cameras
+
+================================================================================
+BASIC CONNECTION
+================================================================================
+
+MATLAB:
+-------
+visa_address = 'TCPIP::192.168.42.223::INSTR';
+awg = visa('tek',visa_address,'InputBufferSize',buffer,'OutputBufferSize',buffer);
+fopen(awg);
+
+Python:
+-------
+import pyvisa
+
+rm = pyvisa.ResourceManager()
+awg = rm.open_resource('TCPIP::192.168.42.223::INSTR')
+awg.write_termination = ';'
+awg.read_termination = '\n'
+
+# Or use the provided class:
+from awg5014c_controller import AWG5014CController
+
+with AWG5014CController('TCPIP::192.168.42.223::INSTR') as awg:
+    # Use awg here
+    pass
+
+================================================================================
+WAVEFORM GENERATION
+================================================================================
+
+MATLAB:
+-------
+samples = 1000;
+t = 0:step:cycles-step;
+y = single(amplitude * sin(harmonic * t));
+gen_wave(y, samples)
+
+Python:
+-------
+import numpy as np
+
+samples = 1000
+t = np.arange(0, cycles, step)
+y = amplitude * np.sin(harmonic * t)
+y = y.astype(np.float32)
+awg.gen_wave(y, samples)  # Using the class
+
+================================================================================
+VISA COMMANDS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+fwrite(awg, 'command')          awg.write('command')
+fread(awg)                      awg.read()
+fscanf(awg, '%s')               awg.query('command')
+fclose(awg)                     awg.close()
+delete(instrfindall)            rm.close()
+
+================================================================================
+ARRAY OPERATIONS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+zeros(1,n)                      np.zeros(n, dtype=np.float32)
+ones(1,n)                       np.ones(n, dtype=np.float32)
+linspace(0, 2*pi, 100)          np.linspace(0, 2*np.pi, 100)
+0:step:stop                     np.arange(0, stop, step)
+sum(A)                          np.sum(A)
+sum(sum(A))                     np.sum(A)
+size(A)                         A.shape
+length(A)                       len(A)
+A(i)                            A[i]
+A(i, j)                         A[i, j]
+A(i:j)                          A[i:j]
+A(i:end)                        A[i:]
+
+================================================================================
+DATA TYPES
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+single(x)                       np.float32(x)
+double(x)                       np.float64(x)
+int8(x)                         np.int8(x)
+uint8(x)                        np.uint8(x)
+uint16(x)                       np.uint16(x)
+typecast(x, 'uint8')            np.frombuffer(x.tobytes(), dtype=np.uint8)
+
+================================================================================
+BINARY DATA HANDLING
+================================================================================
+
+MATLAB:
+-------
+binblock = zeros(1,samples*5,'uint8');
+for k=1:samples
+    binblock((k-1)*5+1:(k-1)*5+5) = [typecast(y(k),'uint8') m(k)];
+end
+
+Python:
+-------
+binblock = np.zeros(samples * 5, dtype=np.uint8)
+for k in range(samples):
+    y_bytes = np.frombuffer(np.float32(y[k]).tobytes(), dtype=np.uint8)
+    binblock[k*5:k*5+4] = y_bytes
+    binblock[k*5+4] = m[k]
+
+================================================================================
+FUNCTION DEFINITIONS
+================================================================================
+
+MATLAB:
+-------
+function result = myfunc(x, y)
+    result = x + y;
+end
+
+Python:
+-------
+def myfunc(x, y):
+    return x + y
+
+With type hints:
+def myfunc(x: float, y: float) -> float:
+    return x + y
+
+================================================================================
+FUNCTIONS WITH CALLBACKS (Nested Functions)
+================================================================================
+
+MATLAB:
+-------
+function outer(x)
+    function inner(y)
+        disp(x + y);
+    end
+    inner(1);
+end
+
+Python:
+-------
+def outer(x):
+    def inner(y):
+        print(x + y)
+    inner(1)
+
+Or using lambda:
+def outer(x):
+    inner = lambda y: print(x + y)
+    inner(1)
+
+================================================================================
+CONDITIONAL STATEMENTS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+if x > 0                        if x > 0:
+    disp('positive')                print('positive')
+elseif x < 0                  elif x < 0:
+    disp('negative')                print('negative')
+else                            else:
+    disp('zero')                    print('zero')
+end
+
+================================================================================
+LOOPS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+for i = 1:n                     for i in range(1, n+1):
+    disp(i)                         print(i)
+end
+
+while x > 0                    while x > 0:
+    x = x - 1                       x = x - 1
+end
+
+================================================================================
+LOGICAL OPERATIONS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+&&                              and
+||                              or
+~                               not
+==                              ==
+~=                              !=
+& (element-wise)                &
+| (element-wise)                |
+
+================================================================================
+BIT OPERATIONS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+bitshift(x, n)                  np.left_shift(x, n) or x << n
+bitand(x, y)                    np.bitwise_and(x, y)
+bitor(x, y)                     np.bitwise_or(x, y)
+bitxor(x, y)                    np.bitwise_xor(x, y)
+
+================================================================================
+STRING OPERATIONS
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+str = 'hello'                   str = 'hello' or str = "hello"
+strcat(a, b)                    a + b
+num2str(x)                      str(x) or f"{x}"
+sprintf('%.2f', x)              f"{x:.2f}"
+str2num(str)                    float(str) or int(str)
+
+================================================================================
+FILE I/O
+================================================================================
+
+MATLAB                          Python
+------------------------------  -------------------------------------------
+load('data.mat')                data = np.load('data.npy')
+save('data.mat', 'x')           np.save('data.npy', x)
+fopen('file.txt', 'r')          open('file.txt', 'r')
+fscanf(fid, '%f')               f.read().split()
+fprintf(fid, '%f\n', x)         f.write(f"{x}\n")
+fclose(fid)                     f.close()
+
+Using context manager:
+fid = fopen('file.txt', 'r');
+try
+    data = fread(fid);
+finally
+    fclose(fid);
+end
+
+Python:
+with open('file.txt', 'r') as f:
+    data = f.read()
+
+================================================================================
+IMAGE OPERATIONS
+================================================================================
+
+MATLAB (Image Acquisition Toolbox):
+------------------------------------
+g = videoinput('winvideo', 1);
+g.ExposureTime = exposure;
+pause(2)
+image = snapshot(g);
+
+Python (OpenCV):
+----------------
+import cv2
+
+cap = cv2.VideoCapture(0)  # 0 = default camera
+cap.set(cv2.CAP_PROP_EXPOSURE, exposure * 1e6)  # Convert to microseconds
+import time
+time.sleep(2)
+ret, image = cap.read()
+image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+cap.release()
+
+Or using the placeholder function in awg5014c_controller.py:
+--------------------------------------------------------------
+image = get_image(camera, exposure_time)
+
+================================================================================
+KEY DIFFERENCES TO REMEMBER
+================================================================================
+
+1. INDEXING:
+   - MATLAB: 1-based indexing, A(1) is first element
+   - Python: 0-based indexing, A[0] is first element
+
+2. ARRAY SLICING:
+   - MATLAB: A(1:5) gives elements 1,2,3,4,5
+   - Python: A[0:5] gives elements 0,1,2,3,4 (end is exclusive)
+
+3. MATRIX MULTIPLICATION:
+   - MATLAB: A * B (element-wise with .*)
+   - Python: A @ B (matrix), A * B (element-wise for numpy arrays)
+
+4. TRANSPOSE:
+   - MATLAB: A'
+   - Python: A.T or np.transpose(A)
+
+5. COMPLEX NUMBERS:
+   - MATLAB: 1+2j or 1+2i
+   - Python: 1+2j
+
+6. EMPTY ARRAY:
+   - MATLAB: []
+   - Python: [] or np.array([])
+
+7. INFINITY/NaN:
+   - MATLAB: Inf, NaN
+   - Python: np.inf, np.nan
+
+8. LOGICAL INDEXING:
+   - MATLAB: A(A > 0) = 0
+   - Python: A[A > 0] = 0
+
+================================================================================
+TESTING CONNECTION
+================================================================================
+
+To test if the AWG is reachable:
+
+Python:
+-------
+import pyvisa
+
+rm = pyvisa.ResourceManager()
+print("Available VISA resources:", rm.list_resources())
+
+try:
+    awg = rm.open_resource('TCPIP::192.168.42.223::INSTR')
+    print("Device IDN:", awg.query('*IDN?'))
+    awg.close()
+except Exception as e:
+    print(f"Connection error: {e}")
+
+================================================================================
+EXAMPLE: COMPLETE WORKFLOW
+================================================================================
+
+MATLAB workflow converted to Python:
+
+# MATLAB:
+# ------
+# harmonic = 93;
+# amplitude = 1.0;
+# samples = 1000;
+# cycles = 2;
+# step = (2 * pi) / samples;
+# cycles = cycles * 2 * pi;
+# t = 0:step:cycles-step;
+# y = single(amplitude * sin(harmonic * t));
+# gen_wave(y, samples)
+
+# Python:
+# ------
+import numpy as np
+from awg5014c_controller import AWG5014CController, sine_wave
+
+with AWG5014CController('TCPIP::192.168.42.223::INSTR') as awg:
+    sine_wave(awg, harmonic=93, amplitude=1.0, samples=1000, cycles=2, channel=1)
+
+================================================================================

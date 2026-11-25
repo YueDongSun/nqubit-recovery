@@ -1,0 +1,64 @@
+# Quartus build databases and generated working folders
+db/
+incremental_db/
+greybox_tmp/
+simulation/
+output_files/
+
+# Quartus reports, summaries, logs, and temporary compilation metadata
+*.rpt
+*.summary
+*.smsg
+*.done
+*.pin
+*.jdi
+*.ddb
+*.cmp
+*.qws
+*.bak
+*.orig
+*.tmp
+*.log
+
+# Programmer / bitstream outputs; regenerate these from Quartus
+*.sof
+*.pof
+*.jic
+*.rbf
+*.rpd
+*.ttf
+*.jam
+*.jbc
+*.svf
+output_file.map
+
+# ModelSim / simulation generated files
+transcript
+vsim.wlf
+*.wlf
+*.vcd
+work/
+rtl_work/
+
+# Python local cache / environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Keep project inputs trackable:
+#   *.qpf, *.qsf, *.qdf, *.qip, *.ppf
+#   *.v, *.sv, *.vhd, *.bdf, *.sdc, *.mif, *.hex
+#   *.py, requirements.txt
+!*.qpf
+!*.qsf
+!*.qdf
+!*.qip
+!*.ppf
+!*.v
+!*.sv
+!*.vhd
+!*.bdf
+!*.sdc
+!*.mif
+!*.hex

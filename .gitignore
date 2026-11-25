@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+runs/
+outputs/
+reports/
+*.log
+*.tmp
+.DS_Store

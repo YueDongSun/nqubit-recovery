@@ -24,5 +24,8 @@ class V10MeasurementEncoder(nn.Module):
     def forward(self, tokens: torch.Tensor, valid_mask: torch.Tensor) -> Dict[str, torch.Tensor]:
         hidden = self.encoder(tokens, src_key_padding_mask=~valid_mask.bool())
         query = self.pool_query.expand(tokens.shape[0], -1, -1)
-        pooled, _ = self.pool(query, hidden, hidden, key_padding_mask=~valid_mask.bool())
+        # Preserve the trained path; evaluation needs no weights and uses SDPA.
+        # A source-bound CUDA replay failed in legacy FP16 bmm after one epoch.
+        pooled, _ = self.pool(query, hidden, hidden, key_padding_mask=~valid_mask.bool(),
+                              need_weights=self.training)
         return {"measurement_tokens": hidden, "measurement_latent": pooled[:, 0]}

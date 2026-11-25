@@ -1,0 +1,35 @@
+// ============================================
+// Counter address allocation (75 cells, modulo 300) — 3Q layout
+// [0      ~ 11]   Multi-click (12 bits)              <- lowest address
+// [12     ~ 21]   Signal intervals (10 bits)
+// [22     ~ 1520] Signal hist (75 x stride 20, 19 bits/cell)
+// [1521   ~ 1530] Idler intervals (10 bits)
+// [1531   ~ 3030] Idler hist (75 x stride 20, 19 bits/cell)
+// [3031   ~ 3040] Coin intervals (10 bits)
+// [3041   ~ 3866] Coin hist (75 x stride 11, 9 bits/cell)
+// [3867   ~ 3906] Read times (40 bits)
+// [3907   ~ 3946] Write times (40 bits)
+// [3947   ~ 4036] Signal cellhist (10 x stride 9, 8 bits/bin)
+// [4037   ~ 4126] Idler cellhist (10 x stride 9, 8 bits/bin)
+// Total: 4127 bits < 6776
+// ============================================
+
+// ============================================
+// Counter address allocation (256 cells, modulo 400) — 4Q layout
+// [0      ~ 11]   Multi-click (12 bits)              <- lowest address
+// [12     ~ 21]   Signal intervals (10 bits)
+// [22     ~ 2325] Signal hist (256 x stride 9, 9 bits/cell)
+// [2326   ~ 2335] Idler intervals (10 bits)
+// [2336   ~ 4639] Idler hist (256 x stride 9, 9 bits/cell)
+// [4640   ~ 4649] Coin intervals (10 bits)
+// [4650   ~ 6185] Coin hist (256 x stride 6, 6 bits/cell)
+// [6186   ~ 6225] Read times (40 bits)
+// [6226   ~ 6265] Write times (40 bits)
+// [6266   ~ 6355] Signal cellhist (10 x stride 9, 8 bits/bin)
+// [6356   ~ 6445] Idler cellhist (10 x stride 9, 8 bits/bin)
+// Total: 6446 bits
+// ============================================
+
+// Frame layout (identical to the FPGA-side comment block in
+// VerilogHDL/{3qubit,4qubit}/main.v; the serial reader in
+// data_ui/ui_3qubit.py / ui_4qubit.py parses these banks in this order).

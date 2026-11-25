@@ -31,3 +31,31 @@ python -m ml_recon.physics_hybrid_v10.long_projector_training \
 ## Reported simulation result
 
 One frozen estimator trained jointly at N = 3, 4 and 8 was evaluated through N = 256. At 77,000 READs per trajectory, an initial centered log-amplitude RMS error of 0.35 and a scaled relative-phase RMS error of 0.70 rad, one bounded correction changed mean conditional W-state overlap by +0.1154 at N = 3 and −0.0008 at N = 256 relative to no action (128 paired simulated initial states per size).
+
+
+## Experiment control, V10 training campaign, and FPGA firmware (2026-11-25)
+
+Three additions published as the apparatus-and-training provenance for the
+paper:
+
+- `system_control/` — the closed-loop experiment control core (runner state
+  machine, AWG upload, serial acquisition orchestration, reconstruction,
+  optional ML feedback), with `AWGcontrol_port/` (PyVISA/WebSocket AWG
+  transports) and `VerilogHDL/` (Cyclone III histogram firmware,
+  75-cell/256-cell layouts).
+- `ml_recon/` at the repository root now also carries the control-loop
+  import closure (feedback models, tomography, physics-hybrid v4-v9
+  stacks, V10 checkpoint/hardware contracts) that `system_control/`
+  imports.
+- `v10_campaign_20261001/` — the frozen Track A / Track B training
+  campaign snapshot: per-track self-contained `ml_recon` trees at the exact
+  source revisions of the reported classifier confirmation runs and the
+  four-cell likelihood-ladder fit, plus the self-contained Track B ladder
+  fitters.
+
+Entrances: `python system_control/run_experiment_ui.py` for the unified
+control UI (PyQt5); each `v10_campaign_20261001/track_*/README` documents
+its own entry points. All campaign code is research-only: nothing here
+writes hardware state, and the bench instrument defaults (AWG pair
+`192.168.2.122::4011` / `192.168.2.110::3992`, serial port) are overridable
+wiring documentation.

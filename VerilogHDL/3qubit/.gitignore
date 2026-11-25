@@ -1,0 +1,48 @@
+# Quartus generated databases and temporary outputs
+/db/
+/incremental_db/
+/greybox_tmp/
+
+# ModelSim/NativeLink generated simulation state
+/simulation/modelsim/work/
+/simulation/modelsim/rtl_work/
+/simulation/modelsim/*.wlf
+/simulation/modelsim/*.xrf
+/simulation/modelsim/*.vstf
+/simulation/modelsim/transcript
+/simulation/modelsim/msim_transcript
+
+# Quartus reports, programming outputs, and compile byproducts
+*.asm.rpt
+*.eda.rpt
+*.fit.rpt
+*.flow.rpt
+*.map.rpt
+*.sta.rpt
+*.rpt
+*.summary
+*.smsg
+*.done
+*.pin
+*.sof
+*.pof
+*.jic
+*.jdi
+*.map
+*.ddb
+*.qws
+*.sdo
+*.sft
+*.vho
+*.bak
+
+# Keep the files needed to reopen and compile the Quartus project.
+!*.qpf
+!*.qsf
+!*.qdf
+!*.qip
+!*.v
+!*.sv
+!*.sdc
+!*.cdf
+!*.ppf

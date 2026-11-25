@@ -1,0 +1,4 @@
+QUARTUS_VERSION = "13.0"
+DATE = "22:00:00  June 22, 2026"
+
+PROJECT_REVISION = "LatticeWriteRead"

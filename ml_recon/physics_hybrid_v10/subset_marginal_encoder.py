@@ -23,6 +23,50 @@ class V10SubsetMarginalEncoder(nn.Module):
             nn.Linear(11, width), nn.LayerNorm(width), nn.GELU(),
             nn.Linear(width, width))
 
+    @staticmethod
+    def _deterministic_mode_pool(
+        token: torch.Tensor,
+        qubits: torch.Tensor,
+        valid: torch.Tensor,
+        N: int,
+    ) -> torch.Tensor:
+        """Pool descriptor tokens without CUDA atomic scatter reductions."""
+
+        rows = []
+        mode_ids = torch.arange(N, device=token.device, dtype=qubits.dtype)
+        for batch_index in range(token.shape[0]):
+            row_context = torch.zeros(
+                (N, token.shape[-1]), dtype=token.dtype, device=token.device)
+            row_weight = torch.zeros(
+                (N, 1), dtype=token.dtype, device=token.device)
+            for position in range(qubits.shape[-1]):
+                position_valid = valid[batch_index, :, position]
+                selected_indices = qubits[
+                    batch_index, position_valid, position]
+                selected_tokens = token[batch_index, position_valid]
+                if selected_indices.numel() == 0:
+                    continue
+                sorted_indices, order = torch.sort(
+                    selected_indices, stable=True)
+                sorted_tokens = selected_tokens[order]
+                prefix = torch.cat((
+                    torch.zeros(
+                        (1, token.shape[-1]),
+                        dtype=token.dtype,
+                        device=token.device,
+                    ),
+                    torch.cumsum(sorted_tokens, dim=0),
+                ), dim=0)
+                starts = torch.searchsorted(
+                    sorted_indices, mode_ids, right=False)
+                stops = torch.searchsorted(
+                    sorted_indices, mode_ids, right=True)
+                row_context = row_context + prefix[stops] - prefix[starts]
+                row_weight = row_weight + (stops - starts).to(
+                    token.dtype).unsqueeze(-1)
+            rows.append(row_context / row_weight.clamp_min(1.0))
+        return torch.stack(rows, dim=0)
+
     def _pair_statistics(self, batch: dict[str, torch.Tensor], N: int
                          ) -> torch.Tensor:
         required = {
@@ -57,18 +101,8 @@ class V10SubsetMarginalEncoder(nn.Module):
         token = self.pair_stat_projection(torch.cat((
             qubit_features, axis_features, numeric), dim=-1))
         token = token * coverage.unsqueeze(-1)
-        mode_context = torch.zeros(
-            (token.shape[0], N, token.shape[-1]),
-            dtype=token.dtype, device=token.device)
-        mode_weight = torch.zeros(
-            (token.shape[0], N, 1), dtype=token.dtype, device=token.device)
-        for position in range(2):
-            index = qubits[:, :, position]
-            mode_context.scatter_add_(
-                1, index.unsqueeze(-1).expand(-1, -1, token.shape[-1]), token)
-            mode_weight.scatter_add_(
-                1, index.unsqueeze(-1), coverage.unsqueeze(-1).to(token.dtype))
-        return mode_context / mode_weight.clamp_min(1.0)
+        valid = coverage.unsqueeze(-1).expand_as(qubits)
+        return self._deterministic_mode_pool(token, qubits, valid, N)
 
     def forward(self, batch: dict[str, torch.Tensor], N: int) -> torch.Tensor:
         if "pair_stat_expectation" in batch:
@@ -104,15 +138,5 @@ class V10SubsetMarginalEncoder(nn.Module):
         token = token + (
             self.axis_descriptor_projection(axis_descriptor) * valid_qubits.unsqueeze(-1)
         ).sum(2) / valid_qubits.sum(2, keepdim=True).clamp_min(1)
-        mode_context = torch.zeros(
-            (counts.shape[0], N, token.shape[-1]), dtype=token.dtype, device=token.device)
-        mode_weight = torch.zeros(
-            (counts.shape[0], N, 1), dtype=token.dtype, device=token.device)
-        for position in range(self.maximum_subset_order):
-            valid = valid_qubits[:, :, position]
-            index = qubits[:, :, position].clamp_min(0)
-            mode_context.scatter_add_(
-                1, index.unsqueeze(-1).expand(-1, -1, token.shape[-1]),
-                token * valid.unsqueeze(-1))
-            mode_weight.scatter_add_(1, index.unsqueeze(-1), valid.unsqueeze(-1).to(token.dtype))
-        return mode_context / mode_weight.clamp_min(1.0)
+        return self._deterministic_mode_pool(
+            token, qubits.clamp_min(0), valid_qubits, N)

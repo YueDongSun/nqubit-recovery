@@ -1,0 +1,94 @@
+# Quartus project: keep source/project files, ignore generated outputs.
+#
+# Keep in git:
+#   *.qpf, *.qsf, *.qdf, *.qip, *.ppf
+#   *.v, *.sv, *.vhd, *.sdc, *.mif, *.hex
+
+# Quartus compile databases and caches
+db/
+incremental_db/
+greybox_tmp/
+.qsys_edit/
+*_sim/
+*_sim_cache/
+
+# ModelSim / simulation generated data
+simulation/
+work/
+rtl_work/
+*.wlf
+*.vstf
+transcript
+msim_transcript
+modelsim.ini
+
+# Quartus reports, summaries, and intermediate metadata
+*.rpt
+*.summary
+*.smsg
+*.done
+*.jdi
+*.pin
+*.qws
+*.ddb
+*.qmsg
+*.qns
+*.sld
+*.sci
+*.bak
+*.log
+*.logdb
+*.hdb
+*.cdb
+*.kpt
+*.rdb
+*.tdb
+*.ammdb
+*.bpm
+*.cmp
+*.eqn
+*.html
+PLLJ_PLLSPE_INFO.txt
+serv_req_info.txt
+
+# Programming and bitstream outputs
+*.sof
+*.pof
+*.jic
+*.rbf
+*.ttf
+*.jam
+*.jbc
+*.svf
+*.cdf
+*.map
+*.pmsf
+*.hexout
+
+# Generated timing/simulation netlists and delay files
+*.vho
+*.vo
+*.sdo
+*.sft
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.tmp
+*.temp
+
+# Explicitly keep project and source inputs, even if a broader rule is added later.
+!*.qpf
+!*.qsf
+!*.qdf
+!*.qip
+!*.ppf
+!*.v
+!*.sv
+!*.vhd
+!*.vhdl
+!*.sdc
+!*.mif
+!*.hex
