@@ -17,7 +17,21 @@ python -m experiments.scale.run_grid validate --n 3 4 8 16
 python -m training.matrix runs/matrix.csv
 ```
 
-To train one of the registered classifiers on a CUDA GPU:
+On Windows PowerShell, run the following from the repository root. Calling
+the virtual environment's Python executable directly avoids needing to
+activate the environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install torch numpy scipy psutil h5py PyYAML matplotlib
+$env:PYTHONPATH = ".;nqrec/src"
+
+.\.venv\Scripts\python.exe -m training.check_forward
+.\.venv\Scripts\python.exe -m experiments.scale.run_grid validate --n 3 4 8 16
+.\.venv\Scripts\python.exe -m training.matrix runs/matrix.csv
+```
+
+To train one of the registered classifiers on a CUDA GPU (Linux/macOS shell):
 
 ```sh
 python -m ml_recon.physics_hybrid_v10.long_projector_training \
@@ -55,7 +69,9 @@ paper:
 
 Entrances: `python system_control/run_experiment_ui.py` for the unified
 control UI (PyQt5); each `v10_campaign_20261001/track_*/README` documents
-its own entry points. All campaign code is research-only: nothing here
-writes hardware state, and the bench instrument defaults (AWG pair
+its own entry points. The training campaign snapshot is intended for offline
+research. The experiment-control and AWG modules include commands that
+configure instruments and enable outputs when invoked with connected
+hardware. The bench instrument defaults (AWG pair
 `192.168.2.122::4011` / `192.168.2.110::3992`, serial port) are overridable
 wiring documentation.
